@@ -1,25 +1,95 @@
 // Header Files
 #include <iostream>
 #include <windows.h>
+#include <fstream>
+#include <string>
 
 using namespace std;
+
+const int totalCourses = 5;
+const int totalSections = 3;
+
+struct User
+{
+    string username; // Username of the user
+    string password; // Password of the user
+    string role;     // Role: "Admin", "Teacher", or "Student"
+    string name;     // Name of the user
+};
+
+struct Student
+{
+    string rollNo;
+    int QuizAttempted;
+    int QuizScore;
+    char grade;
+    char section;
+    bool *coursesPtr = new bool[totalCourses];
+    User *studentPtr = new User;
+};
+
+struct Teacher
+{
+    bool *sectionsPtr = new bool[totalSections];
+    bool *coursesPtr = new bool[totalCourses];
+    User *teacherPtr = new User;
+};
+
+struct Question
+{
+    string question;
+    string options[5];
+};
+
+struct Quiz
+{
+    string quizName;
+    string courseName;
+    int totalQuestions;
+    int totalMarks;
+    Question *quizPtr = new Question[totalQuestions];
+};
 
 // Function to input username and password
 bool login(string role);
 // Function to Validate the entered credentials
-bool Validation(string username, string password, string role);
+bool Validation(const string &username, const string &password, const string &role);
+
+// Getting input from file
+User *getData(const string &location, int &size);
+
+// Function to add a new user
+void addUser(const string &location);
+
+// Function to search for a user by username
+void searchUser(const string &location, const string &username);
+
+// Function to list users based on different criteria
+void listUsers(const string &location);
+
+// Function to delete a user by username
+void deleteUser(const string &location, const string &username);
+
+// Function to update user details
+void updateUser(const string &location, const string &username);
+
+// Function for admin menu
+void adminMenu();
+
+// Helper function to write users to file
+void writeUsersToFile(const string &location, User *data, int size);
 
 // Main Function
 int main()
 {
-    bool flag = true;        // To strore user choice
-    char choice;              // To store user choice
+    bool flag = true;        // To store user choice
+    char choice;             // To store user choice
     bool passwordValidation; // To store password validation
     while (flag)
     {
         // To clear the screen
         system("cls");
-        // Menue
+        // Menu
         cout << "To Enter as an Admin press 1" << endl;
         cout << "To Enter as a Teacher Press 2" << endl;
         cout << "To Enter as a Student Press 3" << endl;
@@ -34,9 +104,8 @@ int main()
             system("cls");
             cout << "Welcome to Admin Panel Please Enter your Credentials or ";
             if (login("admin"))
-                cout << "Login Successfull" << endl;
-            else
-                cout << "Login Failed" << endl;
+                cout << "Login Successful" << endl;
+            adminMenu();
             break;
         case '2':
             cout << "Teacher" << endl;
@@ -78,11 +147,290 @@ bool login(string role)
 
     return false;
 }
+
 // Function to Validate the entered credentials
-bool Validation(string username, string password, string role)
+bool Validation(const string &username, const string &password, const string &role)
 {
-    if (role == "admin")
-        if (username == "admin" && password == "admin")
-            return true;
-    return false;
+    bool isValid = false;
+    int size = 0;
+    // Getting data from file and storing it in a User pointer
+    User *data = getData("Data/users.data", size);
+
+    for (int i = 0; i < size; i++)
+    {
+        if (data[i].username == username && data[i].password == password && data[i].role == role)
+        {
+            isValid = true;
+            break;
+        }
+    }
+    delete[] data;
+    return isValid;
+}
+
+// Getting input from file
+User *getData(const string &location, int &size)
+{
+    // Loading the File
+    ifstream file(location);
+
+    // Count the number of lines
+    size = 0;
+    // A temporary string created to calculate number of lines
+    string temp;
+    while (getline(file, temp))
+        size++;
+
+    // Reset the file stream to the beginning
+    file.clear();
+    file.seekg(0, ios::beg);
+
+    // Allocate memory for User array
+    User *data = new User[size];
+
+    // Read the data from the file
+    for (int i = 0; i < size; i++)
+        file >> data[i].username >> data[i].password >> data[i].role;
+
+    return data;
+}
+
+// Function to add a new user
+void addUser(const string &location)
+{
+    ofstream file(location, ios::app);
+    User newUser;
+    system("cls");
+    cout << "Enter Username: ";
+    cin >> newUser.username;
+    cout << "Enter Password: ";
+    cin >> newUser.password;
+    cout << "Enter Role (Admin/Teacher/Student): ";
+    cin >> newUser.role;
+    cout << "Enter Name: ";
+    cin >> newUser.name;
+    file << endl << newUser.username << " " << newUser.password << " " << newUser.role << " " << newUser.name;
+    file.close();
+    cout << "User added successfully!" << endl;
+    Sleep(1000);
+}
+
+// Function to search for a user by username
+void searchUser(const string &location, const string &username)
+{
+    int size = 0;
+    User *data = getData(location, size);
+    bool found = false;
+    for (int i = 0; i < size; i++)
+        if (data[i].username == username)
+        {
+            cout << "User found!" << endl;
+            cout << "Username: " << data[i].username << endl;
+            cout << "Role: " << data[i].role << endl;
+            cout << "Name: " << data[i].name << endl;
+            found = true;
+            break;
+        }
+
+    if (!found)
+        cout << "User not found!" << endl;
+    delete[] data;
+}
+
+// Function to list users based on different criteria
+void listUsers(const string &location)
+{
+    system("cls");
+    int size = 0;
+    User *data = getData(location, size);
+    char choice;
+    cout << "List Users Menu:" << endl;
+    cout << "1. List all users" << endl;
+    cout << "2. List user by username" << endl;
+    cout << "3. List user by role" << endl;
+    cout << "Enter your choice: ";
+    cin >> choice;
+
+    switch (choice)
+    {
+    case '1':
+        for (int i = 0; i < size; i++)
+            cout << "Username: " << data[i].username << ", Role: " << data[i].role << ", Name: " << data[i].name << endl;
+        break;
+    case '2':
+    {
+        string username;
+        cout << "Enter username: ";
+        cin >> username;
+        bool found = false;
+        for (int i = 0; i < size; i++)
+            if (data[i].username == username)
+            {
+                cout << "Username: " << data[i].username << ", Role: " << data[i].role << ", Name: " << data[i].name << endl;
+                found = true;
+                break;
+            }
+
+        if (!found)
+            cout << "User not found!" << endl;
+        break;
+    }
+    case '3':
+    {
+        string role;
+        cout << "Enter role (Admin/Teacher/Student): ";
+        cin >> role;
+        bool found = false;
+        for (int i = 0; i < size; i++)
+            if (data[i].role == role)
+            {
+                cout << "Username: " << data[i].username << ", Role: " << data[i].role << ", Name: " << data[i].name  << endl;
+                found = true;
+            }
+
+        if (!found)
+            cout << "No users found with the role " << role << "!" << endl;
+        break;
+    }
+    default:
+        cout << "Invalid choice!" << endl;
+        break;
+    }
+    delete[] data;
+}
+
+// Function to delete a user by username
+void deleteUser(const string &location, const string &username)
+{
+    int size = 0;
+    User *data = getData(location, size);
+    bool found = false;
+    int index = -1;
+
+    for (int i = 0; i < size; i++)
+        if (data[i].username == username)
+        {
+            found = true;
+            index = i;
+            break;
+        }
+
+    if (found)
+    {
+        for (int i = index; i < size - 1; i++)
+            data[i] = data[i + 1];
+
+        size--;
+        writeUsersToFile(location, data, size);
+        cout << "User deleted successfully!" << endl;
+        Sleep(1000);
+    }
+    else
+        cout << "User not found!" << endl;
+
+    delete[] data;
+}
+
+// Function to update user details
+void updateUser(const string &location, const string &username)
+{
+    int size = 0;
+    User *data = getData(location, size);
+    bool found = false;
+
+    for (int i = 0; i < size; i++)
+        if (data[i].username == username)
+        {
+            cout << "Enter new password: ";
+            cin >> data[i].password;
+            cout << "Enter new role (Admin/Teacher/Student): ";
+            cin >> data[i].role;
+            cout << "Enter new Name: ";
+            cin >> data[i].name;
+            found = true;
+            break;
+        }
+
+    if (found)
+    {
+        writeUsersToFile(location, data, size);
+        cout << "User updated successfully!" << endl;
+    }
+    else
+        cout << "User not found!" << endl;
+
+    delete[] data;
+}
+
+// Function for admin menu
+void adminMenu()
+{
+    bool flag = true;
+    char choice;
+    while (flag)
+    {
+        system("cls");
+        cout << "Admin Menu:" << endl;
+        cout << "1. Add User" << endl;
+        cout << "2. Search User" << endl;
+        cout << "3. List Users" << endl;
+        cout << "4. Delete User" << endl;
+        cout << "5. Update User" << endl;
+        cout << "6. Logout" << endl;
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice)
+        {
+        case '1':
+            addUser("Data/users.data");
+            break;
+        case '2':
+        {
+            string username;
+            cout << "Enter username to search: ";
+            cin >> username;
+            searchUser("Data/users.data", username);
+            system("pause");
+            break;
+        }
+        case '3':
+            listUsers("Data/users.data");
+            system("pause");
+            break;
+        case '4':
+        {
+            string username;
+            cout << "Enter username to delete: ";
+            cin >> username;
+            deleteUser("Data/users.data", username);
+            system("pause");
+            break;
+        }
+        case '5':
+        {
+            string username;
+            cout << "Enter username to update: ";
+            cin >> username;
+            updateUser("Data/users.data", username);
+            system("pause");
+            break;
+        }
+        case '6':
+            flag = false;
+            break;
+        default:
+            cout << "Invalid choice!" << endl;
+            break;
+        }
+    }
+}
+
+// Helper function to write users to file
+void writeUsersToFile(const string &location, User *data, int size)
+{
+    ofstream file(location, ios::trunc);
+    for (int i = 0; i < size; i++)
+        file << data[i].username << " " << data[i].password << " " << data[i].role << endl;
+    file.close();
 }
