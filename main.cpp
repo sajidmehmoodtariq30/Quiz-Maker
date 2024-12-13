@@ -51,9 +51,9 @@ struct Quiz
 };
 
 // Function to input username and password
-bool login(string role);
+bool login(string role, User &loggedInUser);
 // Function to Validate the entered credentials
-bool Validation(const string &username, const string &password, const string &role);
+bool Validation(const string &username, const string &password, const string &role, User &loggedInUser);
 
 // Getting input from file
 User *getData(const string &location, int &size);
@@ -68,16 +68,13 @@ void searchUser(const string &location, const string &username);
 void listUsers(const string &location);
 
 // Function to delete a user by username
-void deleteUser(const string &location, const string &username);
+void deleteUser(const string &location, const string &username, const User &loggedInUser);
 
 // Function to update user details
 void updateUser(const string &location, const string &username);
 
 // Function for admin menu
-void adminMenu();
-
-// Helper function to write users to file
-void writeUsersToFile(const string &location, User *data, int size);
+void adminMenu(const User &loggedInUser);
 
 // Main Function
 int main()
@@ -85,6 +82,8 @@ int main()
     bool flag = true;        // To store user choice
     char choice;             // To store user choice
     bool passwordValidation; // To store password validation
+    User loggedInUser;       // To store the logged-in user's information
+
     while (flag)
     {
         // To clear the screen
@@ -103,9 +102,12 @@ int main()
         case '1':
             system("cls");
             cout << "Welcome to Admin Panel Please Enter your Credentials or ";
-            if (login("admin"))
+            if (login("admin", loggedInUser))
+            {
                 cout << "Login Successful" << endl;
-            adminMenu();
+                cout << "Welcome, " << loggedInUser.name << "!" << endl;
+                adminMenu(loggedInUser);
+            }
             break;
         case '2':
             cout << "Teacher" << endl;
@@ -125,7 +127,7 @@ int main()
 }
 
 // Function to input username and password
-bool login(string role)
+bool login(string role, User &loggedInUser)
 {
     string username, password;
     bool flag = true;
@@ -138,7 +140,7 @@ bool login(string role)
         cin >> password;
         if (username == "1" || password == "1")
             flag = false;
-        else if (Validation(username, password, role))
+        else if (Validation(username, password, role, loggedInUser))
             return true;
         else
             cout << "Wrong Credentials" << endl;
@@ -149,7 +151,7 @@ bool login(string role)
 }
 
 // Function to Validate the entered credentials
-bool Validation(const string &username, const string &password, const string &role)
+bool Validation(const string &username, const string &password, const string &role, User &loggedInUser)
 {
     bool isValid = false;
     int size = 0;
@@ -161,6 +163,7 @@ bool Validation(const string &username, const string &password, const string &ro
         if (data[i].username == username && data[i].password == password && data[i].role == role)
         {
             isValid = true;
+            loggedInUser = data[i]; // Store the logged-in user's information
             break;
         }
     }
@@ -190,7 +193,7 @@ User *getData(const string &location, int &size)
 
     // Read the data from the file
     for (int i = 0; i < size; i++)
-        file >> data[i].username >> data[i].password >> data[i].role;
+        file >> data[i].username >> data[i].password >> data[i].role >> data[i].name;
 
     return data;
 }
@@ -209,7 +212,8 @@ void addUser(const string &location)
     cin >> newUser.role;
     cout << "Enter Name: ";
     cin >> newUser.name;
-    file << endl << newUser.username << " " << newUser.password << " " << newUser.role << " " << newUser.name;
+    file << endl
+         << newUser.username << " " << newUser.password << " " << newUser.role << " " << newUser.name;
     file.close();
     cout << "User added successfully!" << endl;
     Sleep(1000);
@@ -284,7 +288,7 @@ void listUsers(const string &location)
         for (int i = 0; i < size; i++)
             if (data[i].role == role)
             {
-                cout << "Username: " << data[i].username << ", Role: " << data[i].role << ", Name: " << data[i].name  << endl;
+                cout << "Username: " << data[i].username << ", Role: " << data[i].role << ", Name: " << data[i].name << endl;
                 found = true;
             }
 
@@ -300,8 +304,14 @@ void listUsers(const string &location)
 }
 
 // Function to delete a user by username
-void deleteUser(const string &location, const string &username)
+void deleteUser(const string &location, const string &username, const User &loggedInUser)
 {
+    if (username == loggedInUser.username)
+    {
+        cout << "Error: You cannot delete yourself!" << endl;
+        return;
+    }
+
     int size = 0;
     User *data = getData(location, size);
     bool found = false;
@@ -321,7 +331,10 @@ void deleteUser(const string &location, const string &username)
             data[i] = data[i + 1];
 
         size--;
-        writeUsersToFile(location, data, size);
+        ofstream file(location);
+        for (int i = 0; i < size; i++)
+            file << data[i].username << " " << data[i].password << " " << data[i].role << " " << data[i].name << endl;
+        file.close();
         cout << "User deleted successfully!" << endl;
         Sleep(1000);
     }
@@ -339,31 +352,29 @@ void updateUser(const string &location, const string &username)
     bool found = false;
 
     for (int i = 0; i < size; i++)
+    {
         if (data[i].username == username)
         {
-            cout << "Enter new password: ";
+            cout << "Enter New Password: ";
             cin >> data[i].password;
-            cout << "Enter new role (Admin/Teacher/Student): ";
+            cout << "Enter New Role: ";
             cin >> data[i].role;
-            cout << "Enter new Name: ";
+            cout << "Enter New Name: ";
             cin >> data[i].name;
-            found = true;
             break;
         }
-
-    if (found)
-    {
-        writeUsersToFile(location, data, size);
-        cout << "User updated successfully!" << endl;
     }
-    else
-        cout << "User not found!" << endl;
+
+    ofstream file("Data/Users.dat");
+    for (int i = 0; i < size; i++)
+        file << data[i].username << " " << data[i].password << " " << data[i].role << " " << data[i].name << endl;
 
     delete[] data;
+    file.close();
 }
 
 // Function for admin menu
-void adminMenu()
+void adminMenu(const User &loggedInUser)
 {
     bool flag = true;
     char choice;
@@ -403,7 +414,7 @@ void adminMenu()
             string username;
             cout << "Enter username to delete: ";
             cin >> username;
-            deleteUser("Data/users.data", username);
+            deleteUser("Data/users.data", username, loggedInUser);
             system("pause");
             break;
         }
@@ -424,13 +435,4 @@ void adminMenu()
             break;
         }
     }
-}
-
-// Helper function to write users to file
-void writeUsersToFile(const string &location, User *data, int size)
-{
-    ofstream file(location, ios::trunc);
-    for (int i = 0; i < size; i++)
-        file << data[i].username << " " << data[i].password << " " << data[i].role << endl;
-    file.close();
 }
