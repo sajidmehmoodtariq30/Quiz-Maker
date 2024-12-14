@@ -9,6 +9,41 @@ using namespace std;
 const int totalCourses = 5;
 const int totalSections = 3;
 
+enum Courses
+{
+    MATH = 0,
+    PHYSICS,
+    CHEMISTRY,
+    BIOLOGY,
+    CS
+};
+
+string courseToString(Courses course)
+{
+    switch (course)
+    {
+    case MATH:
+        return "Math";
+    case PHYSICS:
+        return "Physics";
+    case CHEMISTRY:
+        return "Chemistry";
+    case BIOLOGY:
+        return "Biology";
+    case CS:
+        return "Computer Science";
+    default:
+        return "Unknown";
+    }
+}
+
+enum Sections
+{
+    SECTION_A = 0,
+    SECTION_B,
+    SECTION_C
+};
+
 struct User
 {
     string username; // Username of the user
@@ -38,7 +73,9 @@ struct Teacher
 struct Question
 {
     string question;
-    string options[5];
+    string options[4];
+    int correctOption;
+    bool isCorrect;
 };
 
 struct Quiz
@@ -47,32 +84,26 @@ struct Quiz
     string courseName;
     int totalQuestions;
     int totalMarks;
-    Question *quizPtr = new Question[totalQuestions];
+    Question *quizPtr = nullptr;
 };
 
 // Function to input username and password
 bool login(string role, User &loggedInUser);
 // Function to Validate the entered credentials
 bool Validation(const string &username, const string &password, const string &role, User &loggedInUser);
-
 // Getting input from file
 User *getData(const string &location, int &size);
 
 // Function to add a new user
 void addUser(const string &location);
-
 // Function to search for a user by username
 void searchUser(const string &location, const string &username);
-
 // Function to list users based on different criteria
 void listUsers(const string &location);
-
 // Function to delete a user by username
 void deleteUser(const string &location, const string &username, const User &loggedInUser);
-
 // Function to update user details
 void updateUser(const string &location, const string &username);
-
 // Function for admin menu
 void adminMenu(const User &loggedInUser);
 
@@ -110,7 +141,15 @@ int main()
             }
             break;
         case '2':
-            cout << "Teacher" << endl;
+            system("cls");
+            cout << "Welcome to Teacher Panel Please Enter your Credentials or ";
+            if (login("teacher", loggedInUser))
+            {
+                cout << "Login Successful" << endl;
+                cout << "Welcome, " << loggedInUser.name << "!" << endl;
+                // teacherMenu(loggedInUser);
+            }
+            break;
             break;
         case '3':
             cout << "Student" << endl;
@@ -215,6 +254,63 @@ void addUser(const string &location)
     file << endl
          << newUser.username << " " << newUser.password << " " << newUser.role << " " << newUser.name;
     file.close();
+
+    // Handle Teacher-Specific Data
+    if (newUser.role == "teacher")
+    {
+        bool courses[totalCourses];
+        bool sections[totalSections];
+        cout << "Assign Courses to Teacher (1 for Yes, 0 for No):\n";
+        for (int i = 0; i < totalCourses; i++)
+        {
+            cout << "Teach " << courseToString((Courses)i) << "? ";
+            cin >> courses[i];
+        }
+
+        cout << "Assign Sections to Teacher (1 for Yes, 0 for No):\n";
+        for (int i = 0; i < totalSections; i++)
+        {
+            cout << "Teach " << (Sections)i << "? ";
+            cin >> sections[i];
+        }
+
+        // Save teacher-specific data
+        ofstream teacherFile("Data/teacher.data", ios::app);
+        teacherFile << newUser.username << " ";
+        for (int i = 0; i < totalCourses; i++)
+            teacherFile << courses[i] << " ";
+        for (int i = 0; i < totalSections; i++)
+            teacherFile << sections[i] << " ";
+        teacherFile << endl;
+        teacherFile.close();
+        cout << "Teacher-specific data saved successfully!" << endl;
+    }
+
+    // Handle Student-Specific Data
+    else if (newUser.role == "student")
+    {
+        bool courses[totalCourses];
+        char section;
+        cout << "Enroll Student in Courses (1 for Yes, 0 for No):\n";
+        for (int i = 0; i < totalCourses; i++)
+        {
+            cout << "Enroll in " << courseToString((Courses)i) << "? ";
+            cin >> courses[i];
+        }
+
+        cout << "Assign Section to Student (A/B/C): ";
+        cin >> section;
+
+        // Save student-specific data
+        ofstream studentFile("Data/student.data", ios::app);
+        studentFile << newUser.username << " " << section << " ";
+        for (int i = 0; i < totalCourses; i++)
+            studentFile << courses[i] << " ";
+        studentFile << endl;
+        studentFile.close();
+        cout << "Student-specific data saved successfully!" << endl;
+    }
+
     cout << "User added successfully!" << endl;
     Sleep(1000);
 }
