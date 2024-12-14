@@ -1,14 +1,19 @@
 // Header Files
+// For input output operations
 #include <iostream>
+// For sleep function
 #include <windows.h>
+// For file operations
 #include <fstream>
+// For string operations
 #include <string>
 
 using namespace std;
-
+// Total Courses and Sections
 const int totalCourses = 5;
 const int totalSections = 3;
 
+// Enum for Courses
 enum Courses
 {
     MATH = 0,
@@ -18,6 +23,7 @@ enum Courses
     CS
 };
 
+// Function to convert Courses to string
 string courseToString(Courses course)
 {
     switch (course)
@@ -37,6 +43,7 @@ string courseToString(Courses course)
     }
 }
 
+// Enum for Sections
 enum Sections
 {
     SECTION_A = 0,
@@ -44,6 +51,7 @@ enum Sections
     SECTION_C
 };
 
+// User Structure
 struct User
 {
     string username; // Username of the user
@@ -52,39 +60,41 @@ struct User
     string name;     // Name of the user
 };
 
+// Student Structure
 struct Student
 {
-    string rollNo;
-    int QuizAttempted;
-    int QuizScore;
-    char grade;
-    char section;
-    bool *coursesPtr = new bool[totalCourses];
-    User *studentPtr = new User;
+    string rollNo;                             // Roll Number of the student
+    int QuizAttempted;                         // Number of Quizzes Attempted
+    int QuizScore;                             // Score of the Quiz
+    char grade;                                // Grade of the student
+    char section;                              // Section of the student
+    bool *coursesPtr = new bool[totalCourses]; // Courses enrolled by the student
+    User *studentPtr = new User;               // User pointer for the student
 };
 
+// Teacher Structure
 struct Teacher
 {
-    bool *sectionsPtr = new bool[totalSections];
-    bool *coursesPtr = new bool[totalCourses];
-    User *teacherPtr = new User;
+    bool *sectionsPtr = new bool[totalSections]; // Sections taught by the teacher
+    bool *coursesPtr = new bool[totalCourses];   // Courses taught by the teacher
+    User *teacherPtr = new User;                 // User pointer for the teacher
 };
 
-struct Question
+struct Question // Quiz Structure
 {
-    string question;
-    string options[4];
-    int correctOption;
-    bool isCorrect;
+    string question;   // Question
+    string options[4]; // Options
+    int correctOption; // Correct Option
+    bool isCorrect;    // Is the answer correct
 };
 
-struct Quiz
+struct Quiz // Quiz Structure
 {
-    string quizName;
-    string courseName;
-    int totalQuestions;
-    int totalMarks;
-    Question *quizPtr = nullptr;
+    string quizName;             // Name of the Quiz
+    string courseName;           // Name of the Course
+    int totalQuestions;          // Total Questions
+    int totalMarks;              // Total Marks
+    Question *quizPtr = nullptr; // Pointer to the Quiz
 };
 
 // Function to input username and password
@@ -94,6 +104,8 @@ bool Validation(const string &username, const string &password, const string &ro
 // Getting input from file
 User *getData(const string &location, int &size);
 
+// Function for admin menu
+void adminMenu(const User &loggedInUser);
 // Function to add a new user
 void addUser(const string &location);
 // Function to search for a user by username
@@ -104,12 +116,14 @@ void listUsers(const string &location);
 void deleteUser(const string &location, const string &username, const User &loggedInUser);
 // Function to update user details
 void updateUser(const string &location, const string &username);
-// Function for admin menu
-void adminMenu(const User &loggedInUser);
 
+// Teacher Menu
 void teacherMenu(const User &loggedInUser);
-void studentMenu(const User &loggedInUser);
+// Function to accomodate quiz creation
 void createQuiz(const string &location);
+// Student Menu
+void studentMenu(const User &loggedInUser);
+// Function to accomodate quiz attempt
 void attemptQuiz(const string &quizLocation, const string &studentDataLocation, const string &username);
 
 // Main Function
@@ -132,43 +146,48 @@ int main()
         cout << "Enter Your Choice: ";
         // User Choice
         cin >> choice;
-
+        // Calling appropriate functions depending upon the choice of user
         switch (choice)
         {
-        case '1':
+        case '1': // Admin
+            // For clearing previous output
             system("cls");
-            cout << "Welcome to Admin Panel Please Enter your Credentials or ";
+            cout << "Please Enter your Credentials or ";
             if (login("admin", loggedInUser))
             {
                 cout << "Login Successful" << endl;
-                cout << "Welcome, " << loggedInUser.name << "!" << endl;
+                // To pause the screen for 2 seconds bcz the menue functions uses clrscreen
+
+                Sleep(2000);
                 adminMenu(loggedInUser);
             }
             break;
-        case '2':
+        case '2': // Teacher
             system("cls");
             cout << "Welcome to Teacher Panel Please Enter your Credentials or ";
             if (login("teacher", loggedInUser))
             {
                 cout << "Login Successful" << endl;
-                cout << "Welcome, " << loggedInUser.name << "!" << endl;
+                // To pause the screen for 2 seconds bcz the next functions uses clrscreen
+                Sleep(2000);
                 teacherMenu(loggedInUser);
             }
             break;
-        case '3':
+        case '3': // Student
             system("cls");
             cout << "Welcome to Student Panel Please Enter your Credentials or ";
             if (login("student", loggedInUser))
             {
                 cout << "Login Successful" << endl;
-                cout << "Welcome, " << loggedInUser.name << "!" << endl;
+                // To pause the screen for 2 seconds bcz the next functions uses clrscreen
+                Sleep(2000);
                 studentMenu(loggedInUser);
             }
             break;
-        case '4':
+        case '4': // Exit
             flag = false;
             break;
-        default:
+        default: // Invalid Case
             cout << "Invalid Choice" << endl;
             break;
         }
@@ -181,6 +200,7 @@ bool login(string role, User &loggedInUser)
 {
     string username, password;
     bool flag = true;
+    // A while loop to get the username and password untill user enters correct credentials or exits
     while (flag)
     {
         cout << "Press 1 to exit" << endl;
@@ -194,6 +214,7 @@ bool login(string role, User &loggedInUser)
             return true;
         else
             cout << "Wrong Credentials" << endl;
+        // To pause the screen for 2 seconds bcz the next functions uses clrscreen
         Sleep(2000);
     }
 
@@ -208,6 +229,7 @@ bool Validation(const string &username, const string &password, const string &ro
     // Getting data from file and storing it in a User pointer
     User *data = getData("Data/users.data", size);
 
+    // Checking if the entered credentials are correct
     for (int i = 0; i < size; i++)
     {
         if (data[i].username == username && data[i].password == password && data[i].role == role)
@@ -217,6 +239,7 @@ bool Validation(const string &username, const string &password, const string &ro
             break;
         }
     }
+    // Deleting the dynamic data pointer
     delete[] data;
     return isValid;
 }
@@ -251,17 +274,42 @@ User *getData(const string &location, int &size)
 // Function to add a new user
 void addUser(const string &location)
 {
-    ofstream file(location, ios::app);
+    int size = 0;
+    // Creating a new User
     User newUser;
+    bool check = false;
+    // opening the file to append data
+    ofstream file(location, ios::app);
     system("cls");
-    cout << "Enter Username: ";
-    cin >> newUser.username;
+    // Getting the user details
+    cout << "Enter User Details:" << endl;
+    // Making sure the username is unique
+    do
+    {
+        cout << "Enter Username: ";
+        cin >> newUser.username;
+        // Getting data from file and storing it in a User pointer
+        User *data = getData("Data/users.data", size);
+
+        // Checking if the entered credentials are correct
+        for (int i = 0; i < size; i++)
+        {
+            if (data[i].username == newUser.username)
+            {
+                cout << "Username already exists!" << endl;
+                check = true;
+                break;
+            }
+        }
+        delete[] data;
+    } while (check);
     cout << "Enter Password: ";
     cin >> newUser.password;
     cout << "Enter Role (Admin/Teacher/Student): ";
     cin >> newUser.role;
     cout << "Enter Name: ";
     cin >> newUser.name;
+    // Writing the user details to the file
     file << endl
          << newUser.username << " " << newUser.password << " " << newUser.role << " " << newUser.name;
     file.close();
@@ -269,13 +317,19 @@ void addUser(const string &location)
     // Handle Teacher-Specific Data
     if (newUser.role == "teacher")
     {
+        // Openening the file to append data
+        ofstream teacherFile("Data/teacher.data", ios::app);
+        teacherFile << newUser.username << " ";
+        // Creating arrays for courses and sections
         bool courses[totalCourses];
         bool sections[totalSections];
+        // Getting the courses and sections the teacher teaches
         cout << "Assign Courses to Teacher (1 for Yes, 0 for No):\n";
         for (int i = 0; i < totalCourses; i++)
         {
             cout << "Teach " << courseToString((Courses)i) << "? ";
             cin >> courses[i];
+            teacherFile << courses[i] << " ";
         }
 
         cout << "Assign Sections to Teacher (1 for Yes, 0 for No):\n";
@@ -283,43 +337,36 @@ void addUser(const string &location)
         {
             cout << "Teach " << (Sections)i << "? ";
             cin >> sections[i];
+            teacherFile << sections[i] << " ";
         }
 
-        // Save teacher-specific data
-        ofstream teacherFile("Data/teacher.data", ios::app);
-        teacherFile << newUser.username << " ";
-        for (int i = 0; i < totalCourses; i++)
-            teacherFile << courses[i] << " ";
-        for (int i = 0; i < totalSections; i++)
-            teacherFile << sections[i] << " ";
         teacherFile << endl;
         teacherFile.close();
-        cout << "Teacher-specific data saved successfully!" << endl;
     }
 
     // Handle Student-Specific Data
     else if (newUser.role == "student")
     {
-        bool courses[totalCourses];
         char section;
+        bool courses[totalCourses];
+        // Openening the file to append data
+        ofstream studentFile("Data/student.data", ios::app);
+        // Getting the section and courses the student is enrolled in
+        cout << "Assign Section to Student (A/B/C): ";
+        cin >> section;
+        // Writing the student details to the file
+        studentFile << newUser.username << " " << section << " ";
         cout << "Enroll Student in Courses (1 for Yes, 0 for No):\n";
         for (int i = 0; i < totalCourses; i++)
         {
             cout << "Enroll in " << courseToString((Courses)i) << "? ";
             cin >> courses[i];
+            studentFile << courses[i] << " ";
         }
 
-        cout << "Assign Section to Student (A/B/C): ";
-        cin >> section;
-
         // Save student-specific data
-        ofstream studentFile("Data/student.data", ios::app);
-        studentFile << newUser.username << " " << section << " ";
-        for (int i = 0; i < totalCourses; i++)
-            studentFile << courses[i] << " ";
         studentFile << endl;
         studentFile.close();
-        cout << "Student-specific data saved successfully!" << endl;
     }
 
     cout << "User added successfully!" << endl;
@@ -330,8 +377,10 @@ void addUser(const string &location)
 void searchUser(const string &location, const string &username)
 {
     int size = 0;
+    // Getting data from file
     User *data = getData(location, size);
     bool found = false;
+    // Searching for the user
     for (int i = 0; i < size; i++)
         if (data[i].username == username)
         {
@@ -358,35 +407,34 @@ void listUsers(const string &location)
     cout << "2. List Users with the Same Name\n";
     cout << "3. List Students Enrolled in a Specific Course\n";
     cout << "4. List Students in a Specific Section\n";
-    cout << "5. List Teachers for a Specific Section\n";
+    cout << "5. List Teachers in a Specific Section\n";
     cout << "Enter your choice: ";
     cin >> choice;
 
-    if (choice == "1")
+    if (choice == "1") // Listing all users
     {
         User user;
         while (file >> user.username >> user.password >> user.role >> user.name)
-        {
             cout << "Username: " << user.username << ", Role: " << user.role << ", Name: " << user.name << endl;
-        }
     }
-    else if (choice == "2")
+    else if (choice == "2") // Listing users with the same name
     {
         string name;
         cout << "Enter the name to filter by: ";
         cin >> name;
 
         User user;
+        // Searching for the user with the same name
         while (file >> user.username >> user.password >> user.role >> user.name)
-        {
             if (user.name == name)
                 cout << "Username: " << user.username << ", Role: " << user.role << ", Name: " << user.name << endl;
-        }
     }
-    else if (choice == "3")
+    else if (choice == "3") // Listing students enrolled in a specific course
     {
         int course;
-        cout << "Enter the course index (0 for MATH, 1 for PHYSICS, etc.): ";
+        cout << "Choose a course:\n";
+        for (int i = 0; i < totalCourses; i++)
+            cout << i << ". " << courseToString((Courses)i) << endl;
         cin >> course;
 
         ifstream studentFile("Data/student.data");
@@ -403,44 +451,42 @@ void listUsers(const string &location)
         }
         studentFile.close();
     }
-    else if (choice == "4")
+    else if (choice == "4") // Listing students in a specific section
     {
         char section;
         cout << "Enter the section (A/B/C): ";
         cin >> section;
 
         ifstream studentFile("Data/student.data");
-        string username, studentSection;
-        bool courses[totalCourses];
+        string username;
+        char studentSection;
 
         while (studentFile >> username >> studentSection)
-        {
-            for (int i = 0; i < totalCourses; i++)
-                studentFile >> courses[i];
-
-            if (studentSection[0] == section)
+            if (studentSection == section)
                 cout << "Username: " << username << ", Section: " << studentSection << endl;
-        }
+
         studentFile.close();
     }
-    else if (choice == "5")
+    else if (choice == "5") // Listing teachers in a specific section
     {
         char section;
-        cout << "Enter the section (A/B/C): ";
-        cin >> section;
+        // Making sure that the sections are A, B, or C
+        do
+        {
+            cout << "Enter the section (A/B/C): ";
+            cin >> section;
+        } while (section != 'A' && section != 'B' && section != 'C');
 
         ifstream teacherFile("Data/teacher.data");
         string username;
-        bool courses[totalCourses], sections[totalSections];
+        bool sections[totalSections];
 
         while (teacherFile >> username)
         {
-            for (int i = 0; i < totalCourses; i++)
-                teacherFile >> courses[i];
             for (int i = 0; i < totalSections; i++)
                 teacherFile >> sections[i];
 
-            if (sections[section - 'A'])
+            if (sections[section - 'A']) // bcz section is a character
                 cout << "Username: " << username << endl;
         }
         teacherFile.close();
@@ -451,15 +497,17 @@ void listUsers(const string &location)
     }
 
     file.close();
-    Sleep(1000);
+    system("pause");
 }
 
 // Function to delete a user by username
 void deleteUser(const string &location, const string &username, const User &loggedInUser)
 {
+    // Checking if the user is trying to delete himself
     if (username == loggedInUser.username)
     {
         cout << "Error: You cannot delete yourself!" << endl;
+        Sleep(1000);
         return;
     }
 
@@ -467,7 +515,7 @@ void deleteUser(const string &location, const string &username, const User &logg
     User *data = getData(location, size);
     bool found = false;
     int index = -1;
-
+    // Searching for the user
     for (int i = 0; i < size; i++)
         if (data[i].username == username)
         {
@@ -475,7 +523,7 @@ void deleteUser(const string &location, const string &username, const User &logg
             index = i;
             break;
         }
-
+    // Deleting the user
     if (found)
     {
         for (int i = index; i < size - 1; i++)
@@ -496,7 +544,7 @@ void deleteUser(const string &location, const string &username, const User &logg
 }
 
 // Function to update user details
-void updateUser(const string &location,const string &username)
+void updateUser(const string &location, const string &username)
 {
     ifstream inFile(location);
     ofstream outFile("temp.data");
@@ -505,12 +553,14 @@ void updateUser(const string &location,const string &username)
 
     cout << "Enter the username of the user to update: ";
     cin >> usernameToUpdate;
-
+    // Getting the user details
     User user;
     while (inFile >> user.username >> user.password >> user.role >> user.name)
     {
+        // Checking if the user is the one to update
         if (user.username == usernameToUpdate)
         {
+            // if found then update the details
             found = true;
             cout << "Updating details for user: " << usernameToUpdate << endl;
 
@@ -575,11 +625,13 @@ void updateUser(const string &location,const string &username)
                 cout << "Student-specific data updated successfully!" << endl;
             }
         }
+        // If not found then write the data to the file
         outFile << user.username << " " << user.password << " " << user.role << " " << user.name << endl;
     }
 
     inFile.close();
     outFile.close();
+    // Remove the old file and rename the new file
     remove(location.c_str());
     rename("temp.data", location.c_str());
 
@@ -599,6 +651,8 @@ void adminMenu(const User &loggedInUser)
     while (flag)
     {
         system("cls");
+        // Admin Menu
+        cout << "Hello " << loggedInUser.name << " Welcome to Admin Panel" << endl;
         cout << "Admin Menu:" << endl;
         cout << "1. Add User" << endl;
         cout << "2. Search User" << endl;
@@ -611,10 +665,10 @@ void adminMenu(const User &loggedInUser)
 
         switch (choice)
         {
-        case '1':
+        case '1': // Add User
             addUser("Data/users.data");
             break;
-        case '2':
+        case '2': // Search User
         {
             string username;
             cout << "Enter username to search: ";
@@ -623,11 +677,11 @@ void adminMenu(const User &loggedInUser)
             system("pause");
             break;
         }
-        case '3':
+        case '3': // List Users
             listUsers("Data/users.data");
             system("pause");
             break;
-        case '4':
+        case '4': // Delete User
         {
             string username;
             cout << "Enter username to delete: ";
@@ -636,7 +690,7 @@ void adminMenu(const User &loggedInUser)
             system("pause");
             break;
         }
-        case '5':
+        case '5': // Update User
         {
             string username;
             cout << "Enter username to update: ";
@@ -663,24 +717,26 @@ void teacherMenu(const User &loggedInUser)
     while (flag)
     {
         system("cls");
+        cout << "Hello " << loggedInUser.name << "Welcome to Teacher Panel" << endl;
         cout << "Teacher Menu:" << endl;
         cout << "1. Create Quiz" << endl;
         cout << "2. View Results" << endl;
-        cout << "3. Logout" << endl;
+        cout << "3. Edit Quiz" << endl;
+        cout << "4. Assign Quiz" << endl;
+        cout << "5. Logout" << endl;
         cout << "Enter your choice: ";
         cin >> choice;
 
         switch (choice)
         {
-        case '1':
+        case '1': // Create Quiz
             createQuiz("Data/quizzes.data");
             break;
-        case '2':
-            cout << "Viewing results is not implemented yet." << endl;
-            Sleep(2000);
+        case '2': // View Results
+            viewResults("Data/student.data");
             break;
-        case '3':
-            flag = false;
+        case '3': // Edit Quiz
+            editQuiz("Data/quizzes.data");
             break;
         default:
             cout << "Invalid choice!" << endl;
@@ -690,6 +746,182 @@ void teacherMenu(const User &loggedInUser)
     }
 }
 
+void viewResults(const string &studentDataLocation)
+{
+    ifstream file(studentDataLocation);
+    if (!file.is_open())
+    {
+        cout << "No results available!" << endl;
+        Sleep(2000);
+        return;
+    }
+
+    string username, quizName;
+    char Grade;
+    int score;
+
+    cout << "Results:" << endl;
+    while (file >> username >> quizName >> score >> Grade)
+        cout << "Username: " << username << ", Quiz: " << quizName << ", Score: " << score << "/" << ", Grade: " << Grade << endl;
+
+    file.close();
+    system("pause");
+}
+
+void editQuiz(const string &location)
+{
+    ifstream file(location);
+    if (!file.is_open())
+    {
+        cout << "No quizzes available!" << endl;
+        Sleep(2000);
+        return;
+    }
+
+    string quizName;
+    cout << "Enter Quiz Name to Edit: ";
+    cin >> quizName;
+
+    int size = 0; // Number of quizzes in the file
+    file.seekg(0, ios::beg); // Ensure the file is at the start for counting
+    Quiz tempQuiz;
+
+    // Count quizzes
+    while (file >> tempQuiz.quizName >> tempQuiz.courseName >> tempQuiz.totalQuestions)
+    {
+        file.ignore(); // Skip to next line
+        for (int i = 0; i < tempQuiz.totalQuestions; i++)
+        {
+            string dummy;
+            getline(file, dummy); // Question
+            for (int j = 0; j < 4; j++)
+            {
+                getline(file, dummy); // Options
+            }
+            file >> dummy; // Correct answer
+        }
+        size++;
+    }
+    file.clear();
+    file.seekg(0, ios::beg); // Reset to the beginning for actual reading
+
+    if (size == 0)
+    {
+        cout << "No quizzes found!" << endl;
+        Sleep(2000);
+        return;
+    }
+
+    Quiz *quizzes = new Quiz[size];
+    bool found = false;
+
+    // Load quizzes into dynamic array
+    for (int i = 0; i < size; i++)
+    {
+        file >> quizzes[i].quizName >> quizzes[i].courseName >> quizzes[i].totalQuestions;
+        quizzes[i].quizPtr = new Question[quizzes[i].totalQuestions];
+        for (int j = 0; j < quizzes[i].totalQuestions; j++)
+        {
+            file.ignore();
+            getline(file, quizzes[i].quizPtr[j].question);
+            for (int k = 0; k < 4; k++)
+            {
+                getline(file, quizzes[i].quizPtr[j].options[k]);
+            }
+            file >> quizzes[i].quizPtr[j].correctOption;
+        }
+
+        if (quizzes[i].quizName == quizName)
+        {
+            found = true;
+        }
+    }
+    file.close();
+
+    if (!found)
+    {
+        cout << "Quiz not found!" << endl;
+        for (int i = 0; i < size; i++)
+        {
+            delete[] quizzes[i].quizPtr;
+        }
+        delete[] quizzes;
+        Sleep(2000);
+        return;
+    }
+
+    // Edit the selected quiz
+    for (int k = 0; k < size; k++)
+    {
+        if (quizzes[k].quizName == quizName)
+        {
+            cout << "Editing Quiz: " << quizzes[k].quizName << endl;
+            for (int i = 0; i < quizzes[k].totalQuestions; i++)
+            {
+                cout << "Question " << i + 1 << ": " << quizzes[k].quizPtr[i].question << endl;
+                for (int j = 0; j < 4; j++)
+                {
+                    cout << j + 1 << ". " << quizzes[k].quizPtr[i].options[j] << endl;
+                }
+                cout << "Enter new question (leave blank to keep current): ";
+                string newQuestion;
+                cin.ignore();
+                getline(cin, newQuestion);
+                if (!newQuestion.empty())
+                {
+                    quizzes[k].quizPtr[i].question = newQuestion;
+                }
+
+                for (int j = 0; j < 4; j++)
+                {
+                    cout << "Enter new option " << j + 1 << " (leave blank to keep current): ";
+                    string newOption;
+                    getline(cin, newOption);
+                    if (!newOption.empty())
+                    {
+                        quizzes[k].quizPtr[i].options[j] = newOption;
+                    }
+                }
+
+                cout << "Enter new correct option (1-4, leave blank to keep current): ";
+                string newCorrectOption;
+                getline(cin, newCorrectOption);
+                if (!newCorrectOption.empty())
+                {
+                    quizzes[k].quizPtr[i].correctOption = stoi(newCorrectOption);
+                }
+            }
+            break;
+        }
+    }
+
+    // Save the updated quizzes back to the file
+    ofstream outFile(location);
+    for (int k = 0; k < size; k++)
+    {
+        outFile << quizzes[k].quizName << " " << quizzes[k].courseName << " " << quizzes[k].totalQuestions << endl;
+        for (int i = 0; i < quizzes[k].totalQuestions; i++)
+        {
+            outFile << quizzes[k].quizPtr[i].question << endl;
+            for (int j = 0; j < 4; j++)
+                outFile << quizzes[k].quizPtr[i].options[j] << endl;
+
+            outFile << quizzes[k].quizPtr[i].correctOption << endl;
+        }
+    }
+    outFile.close();
+
+    // Free memory
+    for (int i = 0; i < size; i++)
+    {
+        delete[] quizzes[i].quizPtr;
+    }
+    delete[] quizzes;
+
+    cout << "Quiz edited successfully!" << endl;
+    Sleep(2000);
+}
+
 void studentMenu(const User &loggedInUser)
 {
     bool flag = true;
@@ -697,6 +929,7 @@ void studentMenu(const User &loggedInUser)
     while (flag)
     {
         system("cls");
+        cout << "Hello " << loggedInUser.name << "Welcome to Admin Panel" << endl;
         cout << "Student Menu:" << endl;
         cout << "1. Attempt Quiz" << endl;
         cout << "2. View Grades" << endl;
@@ -711,6 +944,7 @@ void studentMenu(const User &loggedInUser)
             break;
         case '2':
             cout << "Viewing grades is not implemented yet." << endl;
+            // To pause the screen for 2 seconds bcz the next functions uses clrscreen
             Sleep(2000);
             break;
         case '3':
@@ -766,6 +1000,7 @@ void createQuiz(const string &location)
     delete[] newQuiz.quizPtr;
     file.close();
     cout << "Quiz created successfully!" << endl;
+    // To pause the screen for 2 seconds bcz the next functions uses clrscreen
     Sleep(2000);
 }
 
@@ -775,6 +1010,7 @@ void attemptQuiz(const string &quizLocation, const string &studentDataLocation, 
     if (!file.is_open())
     {
         cout << "No quizzes available!" << endl;
+        // To pause the screen for 2 seconds bcz the next functions uses clrscreen
         Sleep(2000);
         return;
     }
@@ -811,6 +1047,7 @@ void attemptQuiz(const string &quizLocation, const string &studentDataLocation, 
     if (!found)
     {
         cout << "Quiz not found!" << endl;
+        // To pause the screen for 2 seconds bcz the next functions uses clrscreen
         Sleep(2000);
         return;
     }
@@ -851,5 +1088,6 @@ void attemptQuiz(const string &quizLocation, const string &studentDataLocation, 
     }
 
     delete[] quiz.quizPtr;
+    // To pause the screen for 2 seconds bcz the next functions uses clrscreen
     Sleep(2000);
 }
