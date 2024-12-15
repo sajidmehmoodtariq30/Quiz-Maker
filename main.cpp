@@ -51,6 +51,22 @@ enum Sections
     SECTION_C
 };
 
+// Function to convert Courses to string
+string sectionsToString(Sections section)
+{
+    switch (section)
+    {
+    case SECTION_A:
+        return "A";
+    case SECTION_B:
+        return "B";
+    case SECTION_C:
+        return "C";
+    default:
+        return "Unknown";
+    }
+}
+
 // User Structure
 struct User
 {
@@ -125,6 +141,17 @@ void createQuiz(const string &location);
 void studentMenu(const User &loggedInUser);
 // Function to accomodate quiz attempt
 void attemptQuiz(const string &quizLocation, const string &studentDataLocation, const string &username);
+// View Results
+void viewResults(const string &studentDataLocation);
+// edit quiz
+void editQuiz(const string &location);
+// function to convert a string into lower case
+string toLowerCase(string str)
+{
+    for (int i = 0; i < str.length(); i++)
+        str[i] = tolower(str[i]);
+    return str;
+}
 
 // Main Function
 int main()
@@ -157,7 +184,6 @@ int main()
             {
                 cout << "Login Successful" << endl;
                 // To pause the screen for 2 seconds bcz the menue functions uses clrscreen
-
                 Sleep(2000);
                 adminMenu(loggedInUser);
             }
@@ -200,14 +226,16 @@ bool login(string role, User &loggedInUser)
 {
     string username, password;
     bool flag = true;
-    // A while loop to get the username and password untill user enters correct credentials or exits
+    // A while loop to get the username and password untill user enters correct credentials or exits by pressing 1
     while (flag)
     {
         cout << "Press 1 to exit" << endl;
         cout << "Enter Username: ";
         cin >> username;
+        username = toLowerCase(username);
         cout << "Enter Password: ";
         cin >> password;
+        password = toLowerCase(password);
         if (username == "1" || password == "1")
             flag = false;
         else if (Validation(username, password, role, loggedInUser))
@@ -288,10 +316,11 @@ void addUser(const string &location)
     {
         cout << "Enter Username: ";
         cin >> newUser.username;
+        newUser.username = toLowerCase(newUser.username);
         // Getting data from file and storing it in a User pointer
         User *data = getData("Data/users.data", size);
 
-        // Checking if the entered credentials are correct
+        // Checking if the entered user exists before
         for (int i = 0; i < size; i++)
         {
             if (data[i].username == newUser.username)
@@ -307,6 +336,7 @@ void addUser(const string &location)
     cin >> newUser.password;
     cout << "Enter Role (Admin/Teacher/Student): ";
     cin >> newUser.role;
+    newUser.role = toLowerCase(newUser.role);
     cout << "Enter Name: ";
     cin >> newUser.name;
     // Writing the user details to the file
@@ -327,16 +357,26 @@ void addUser(const string &location)
         cout << "Assign Courses to Teacher (1 for Yes, 0 for No):\n";
         for (int i = 0; i < totalCourses; i++)
         {
-            cout << "Teach " << courseToString((Courses)i) << "? ";
-            cin >> courses[i];
+            // Making sure 1 or 0 is entered
+            do
+            {
+                cout << "Teach " << courseToString((Courses)i) << "? ";
+                cin >> courses[i];
+            } while (courses[i] != 0 && courses[i] != 1);
+            // Appending data into file
             teacherFile << courses[i] << " ";
         }
 
         cout << "Assign Sections to Teacher (1 for Yes, 0 for No):\n";
         for (int i = 0; i < totalSections; i++)
         {
-            cout << "Teach " << (Sections)i << "? ";
-            cin >> sections[i];
+            // Making sure 1 or 0 is pressed
+            do
+            {
+                cout << "Teach " << sectionsToString((Sections)i) << "? ";
+                cin >> sections[i];
+            } while (courses[i] != 0 && courses[i] != 1);
+
             teacherFile << sections[i] << " ";
         }
 
@@ -416,6 +456,31 @@ void listUsers(const string &location)
         User user;
         while (file >> user.username >> user.password >> user.role >> user.name)
             cout << "Username: " << user.username << ", Role: " << user.role << ", Name: " << user.name << endl;
+        if (user.role == "student")
+        {
+            Student student;
+            while (file >> student.rollNo >> student.QuizAttempted >> student.QuizScore >> student.grade >> student.section)
+            {
+                cout << "Roll No: " << student.rollNo << ", Quiz Attempted: " << student.QuizAttempted << ", Quiz Score: " << student.QuizScore << ", Grade: " << student.grade << ", Section: " << student.section << endl;
+                for (int i = 0; i < totalCourses; i++)
+                    if (student.coursesPtr[i])
+                        cout << "Course :" << courseToString((Courses)i) << " ";
+            }
+        }
+        else if (user.role == "teacher")
+        {
+            Teacher teacher;
+            while (file >> teacher.teacherPtr->username)
+            {
+                for (int i = 0; i < totalCourses; i++)
+                    if (teacher.coursesPtr[i])
+                        cout << "Course :" << courseToString((Courses)i) << " ";
+                cout << endl;
+                for (int i = 0; i < totalSections; i++)
+                    if (teacher.sectionsPtr[i])
+                        cout << "Sections :" << sectionsToString((Sections)i) << " ";
+            }
+        }
     }
     else if (choice == "2") // Listing users with the same name
     {
@@ -428,14 +493,42 @@ void listUsers(const string &location)
         while (file >> user.username >> user.password >> user.role >> user.name)
             if (user.name == name)
                 cout << "Username: " << user.username << ", Role: " << user.role << ", Name: " << user.name << endl;
+        if (user.role == "student")
+        {
+            Student student;
+            while (file >> student.rollNo >> student.QuizAttempted >> student.QuizScore >> student.grade >> student.section)
+            {
+                cout << "Roll No: " << student.rollNo << ", Quiz Attempted: " << student.QuizAttempted << ", Quiz Score: " << student.QuizScore << ", Grade: " << student.grade << ", Section: " << student.section << endl;
+                for (int i = 0; i < totalCourses; i++)
+                    if (student.coursesPtr[i])
+                        cout << "Course :" << courseToString((Courses)i) << " ";
+            }
+        }
+        else if (user.role == "teacher")
+        {
+            Teacher teacher;
+            while (file >> teacher.teacherPtr->username)
+            {
+                for (int i = 0; i < totalCourses; i++)
+                    if (teacher.coursesPtr[i])
+                        cout << "Course :" << courseToString((Courses)i) << " ";
+                cout << endl;
+                for (int i = 0; i < totalSections; i++)
+                    if (teacher.sectionsPtr[i])
+                        cout << "Sections :" << sectionsToString((Sections)i) << " ";
+            }
+        }
     }
     else if (choice == "3") // Listing students enrolled in a specific course
     {
         int course;
-        cout << "Choose a course:\n";
-        for (int i = 0; i < totalCourses; i++)
-            cout << i << ". " << courseToString((Courses)i) << endl;
-        cin >> course;
+        do
+        {
+            cout << "Choose a course:\n";
+            for (int i = 0; i < totalCourses; i++)
+                cout << i + 1 << ". " << courseToString((Courses)i) << endl;
+            cin >> course;
+        } while (course < 0 || course > totalCourses);
 
         ifstream studentFile("Data/student.data");
         string username, section;
@@ -738,12 +831,172 @@ void teacherMenu(const User &loggedInUser)
         case '3': // Edit Quiz
             editQuiz("Data/quizzes.data");
             break;
+        case '4': // Assign Quiz
+            assignQuiz("Data/quizzes.data", "Data/student.data");
+            // To pause the screen for 2 seconds bcz the next functions uses clrscreen
+            Sleep(2000);
+            break;
+        case '5':
+            flag = false;
+            break;
         default:
             cout << "Invalid choice!" << endl;
             Sleep(1000);
             break;
         }
     }
+}
+
+void assignQuiz(string quizFile, string studentFile)
+{
+    int size = 0;
+    Quiz *quizzes = getQuizzes(quizFile, size);
+    if (size == 0)
+    {
+        cout << "No quizzes available!" << endl;
+        Sleep(2000);
+        return;
+    }
+
+    // Display available quizzes
+    cout << "Available Quizzes:" << endl;
+    for (int i = 0; i < size; i++)
+    {
+        cout << i + 1 << ". " << quizzes[i].quizName << " (" << quizzes[i].courseName << ")" << endl;
+    }
+
+    // Select a quiz to assign
+    int quizChoice;
+    do
+    {
+        cout << "Enter the number of the quiz to assign: ";
+        cin >> quizChoice;
+    } while (quizChoice < 1 || quizChoice > size);
+
+    // Get the selected quiz
+    Quiz selectedQuiz = quizzes[quizChoice - 1];
+
+    // Display sections
+    cout << "Available Sections:" << endl;
+    for (int i = 0; i < totalSections; i++)
+    {
+        cout << i + 1 << ". " << sectionsToString((Sections)i) << endl;
+    }
+
+    // Select a section
+    int sectionChoice;
+    do
+    {
+        cout << "Enter the number of the section to assign the quiz to: ";
+        cin >> sectionChoice;
+    } while (sectionChoice < 1 || sectionChoice > totalSections);
+
+    // Get the selected section
+    char selectedSection = sectionsToString((Sections)(sectionChoice - 1))[0];
+
+    // Display students
+    int studentSize = 0;
+    User *students = getData(studentFile, studentSize);
+    cout << "Available Students in Section " << selectedSection << " enrolled in " << selectedQuiz.courseName << ":" << endl;
+    for (int i = 0; i < studentSize; i++)
+    {
+        if (students[i].role == "student")
+        {
+            ifstream studentDataFile("Data/student.data");
+            string username;
+            char section;
+            bool courses[totalCourses];
+            while (studentDataFile >> username >> section)
+            {
+                for (int j = 0; j < totalCourses; j++)
+                {
+                    studentDataFile >> courses[j];
+                    if (username == students[i].username && section == selectedSection && courses[selectedQuiz.courseName == courseToString((Courses)j)])
+                    {
+                        cout << i + 1 << ". " << students[i].username << " (" << students[i].name << ")" << endl;
+                    }
+                }
+            }
+            studentDataFile.close();
+        }
+    }
+
+    // Assign the quiz to the selected students
+    ofstream outFile("Data/assigned_quizzes.data", ios::app);
+    for (int i = 0; i < studentSize; i++)
+    {
+        if (students[i].role == "student")
+        {
+            ifstream studentDataFile("Data/student.data");
+            string username;
+            char section;
+            bool courses[totalCourses];
+            while (studentDataFile >> username >> section)
+            {
+                for (int j = 0; j < totalCourses; j++)
+                {
+                    studentDataFile >> courses[j];
+                    if (username == students[i].username && section == selectedSection && courses[selectedQuiz.courseName == courseToString((Courses)j)])
+                    {
+                        outFile << students[i].username << " " << selectedQuiz.quizName << endl;
+                    }
+                }
+            }
+            studentDataFile.close();
+        }
+    }
+    outFile.close();
+
+    cout << "Quiz assigned successfully!" << endl;
+
+    // Clean up
+    delete[] quizzes;
+    delete[] students;
+    Sleep(2000);
+}
+
+Quiz *getQuizzes(const string &location, int &size)
+{
+    ifstream file(location);
+    if (!file.is_open())
+    {
+        cout << "No quizzes available!" << endl;
+        Sleep(2000);
+        return nullptr;
+    }
+
+    // Count the number of quizzes
+    size = 0;
+    string temp;
+    while (getline(file, temp))
+        size++;
+
+    // Reset the file stream to the beginning
+    file.clear();
+    file.seekg(0, ios::beg);
+
+    // Allocate memory for Quiz array
+    Quiz *quizzes = new Quiz[size];
+
+    // Read the data from the file
+    for (int i = 0; i < size; i++)
+    {
+        file >> quizzes[i].quizName >> quizzes[i].courseName >> quizzes[i].totalQuestions;
+        quizzes[i].quizPtr = new Question[quizzes[i].totalQuestions];
+        for (int j = 0; j < quizzes[i].totalQuestions; j++)
+        {
+            file.ignore();
+            getline(file, quizzes[i].quizPtr[j].question);
+            for (int k = 0; k < 4; k++)
+            {
+                getline(file, quizzes[i].quizPtr[j].options[k]);
+            }
+            file >> quizzes[i].quizPtr[j].correctOption;
+        }
+    }
+
+    file.close();
+    return quizzes;
 }
 
 void viewResults(const string &studentDataLocation)
@@ -782,7 +1035,7 @@ void editQuiz(const string &location)
     cout << "Enter Quiz Name to Edit: ";
     cin >> quizName;
 
-    int size = 0; // Number of quizzes in the file
+    int size = 0;            // Number of quizzes in the file
     file.seekg(0, ios::beg); // Ensure the file is at the start for counting
     Quiz tempQuiz;
 
@@ -1000,7 +1253,6 @@ void createQuiz(const string &location)
     delete[] newQuiz.quizPtr;
     file.close();
     cout << "Quiz created successfully!" << endl;
-    // To pause the screen for 2 seconds bcz the next functions uses clrscreen
     Sleep(2000);
 }
 
@@ -1010,7 +1262,6 @@ void attemptQuiz(const string &quizLocation, const string &studentDataLocation, 
     if (!file.is_open())
     {
         cout << "No quizzes available!" << endl;
-        // To pause the screen for 2 seconds bcz the next functions uses clrscreen
         Sleep(2000);
         return;
     }
@@ -1047,7 +1298,6 @@ void attemptQuiz(const string &quizLocation, const string &studentDataLocation, 
     if (!found)
     {
         cout << "Quiz not found!" << endl;
-        // To pause the screen for 2 seconds bcz the next functions uses clrscreen
         Sleep(2000);
         return;
     }
@@ -1088,6 +1338,5 @@ void attemptQuiz(const string &quizLocation, const string &studentDataLocation, 
     }
 
     delete[] quiz.quizPtr;
-    // To pause the screen for 2 seconds bcz the next functions uses clrscreen
     Sleep(2000);
 }
