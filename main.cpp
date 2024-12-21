@@ -22,6 +22,7 @@ bool login(string designation, User &loggedInUser);
 string toLowerCase(string str);
 bool Validation(const string &username, const string &password, const string &role, User &loggedInUser);
 User *getData(const string &location, int &size);
+void adminMenu(const User &loggedInUser);
 
 // Main function starting point of a cpp program
 int main()
@@ -44,13 +45,14 @@ int main()
         switch (choice)
         {
         case '1': // Admin
+            cout << "Please Enter your credentials: ";
             if (login("admin", loggedInUser))
             {
                 cout << "Login Successful" << endl;
                 Sleep(2000); // To pause the screen for 2 seconds
-                // adminMenu(loggedInUser);
+                adminMenu(loggedInUser);
             }
-            
+
             system("pause");
             break;
         case '2': // Teacher
@@ -76,7 +78,7 @@ int main()
 void displayMainMenu()
 {
     system("cls");
-    cout << "1. TO Enter as an Admin" << endl;
+    cout << "1. To Enter as an Admin" << endl;
     cout << "2. To Enter as a Teacher" << endl;
     cout << "3. To Enter as a Student" << endl;
     cout << "4. To Exit" << endl;
@@ -123,6 +125,18 @@ bool Validation(const string &username, const string &password, const string &ro
     // Getting data from file and storing it in a User pointer
     User *data = getData("Data/users.txt", size);
 
+    if (data == nullptr)
+    {
+        cout << "Enter you name: ";
+        string name;
+        cin.ignore(); // To ignore the previous newline character
+        getline(cin, name);
+        ofstream file("Data/users.txt");
+        file << username << " " << password << " " << role << " " << name << endl;
+        file.close();
+        data = getData("Data/users.txt", size);
+    }
+
     // Checking if the entered credentials are correct
     for (int i = 0; i < size; i++)
     {
@@ -142,7 +156,7 @@ bool Validation(const string &username, const string &password, const string &ro
 User *getData(const string &location, int &size)
 {
     // Loading the File
-    ifstream file(location);
+    fstream file(location);
 
     // Count the number of lines
     size = 0;
@@ -150,7 +164,9 @@ User *getData(const string &location, int &size)
     string temp;
     while (getline(file, temp))
         size++;
-
+    // checking if the file is empty
+    if (size == 0)
+        return nullptr;
     // Reset the file stream to the beginning
     file.clear();
     file.seekg(0, ios::beg);
@@ -161,10 +177,165 @@ User *getData(const string &location, int &size)
     // Read the data from the file
     for (int i = 0; i < size; i++)
     {
-        file >> data[i].username >> data[i].password >> data[i].role >> data[i].name; // Similar to using single cin ad getting multiple inputs in multiple variables
+        file >> data[i].username >> data[i].password >> data[i].role; // Similar to using single cin ad getting multiple inputs in multiple variables
+        getline(file, data[i].name);                                  // To get the name of the user
         data[i].username = toLowerCase(data[i].username);
         data[i].password = toLowerCase(data[i].password);
     }
 
     return data;
+}
+
+// Admin Menu
+void adminMenu(const User &loggedInUser)
+{
+    bool flag = true;
+    char choice;
+    while (flag)
+    {
+        system("cls");
+        // Admin Menu
+        cout << "Hello " << loggedInUser.name << " Welcome to Admin Panel" << endl;
+        cout << "Admin Menu:" << endl;
+        cout << "1. Add User" << endl;
+        cout << "2. Search User" << endl;
+        cout << "3. List Users" << endl;
+        cout << "4. Delete User" << endl;
+        cout << "5. Update User" << endl;
+        cout << "6. Logout" << endl;
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice)
+        {
+        case '1': // Add User
+            // addUser("Data/users.txt");
+            break;
+        case '2': // Search User
+        {
+            string username;
+            cout << "Enter username to search: ";
+            cin >> username;
+            // searchUser("Data/users.txt", username);
+            system("pause");
+            break;
+        }
+        case '3': // List Users
+            // listUsers("Data/users.txt");
+            system("pause");
+            break;
+        case '4': // Delete User
+        {
+            // deleteUser("Data/users.txt");
+            system("pause");
+            break;
+        }
+        case '5': // Update User
+        {
+            // editUser("Data/users.txt");
+            system("pause");
+            break;
+        }
+        case '6':
+            flag = false;
+            break;
+        default:
+            cout << "Invalid choice!" << endl;
+            break;
+        }
+    }
+}
+
+// Teacher Menue
+void teacherMenu(const User &loggedInUser)
+{
+    bool flag = true;
+    char choice;
+    while (flag)
+    {
+        system("cls");
+        cout << "Hello " << loggedInUser.name << " Welcome to Teacher Panel" << endl;
+        cout << "Teacher Menu:" << endl;
+        cout << "1. Create Quiz" << endl;
+        cout << "2. Edit Quiz" << endl;
+        cout << "3. Preview Quiz" << endl;
+        cout << "4. Assign Quiz" << endl;
+        cout << "5. Assign Grades" << endl;
+        cout << "6. View Grades" << endl;
+        cout << "7. Logout" << endl;
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice)
+        {
+        case '1': // Create Quiz
+            // createQuiz("Data/quizez.txt", loggedInUser.username);
+            system("pause");
+            break;
+        case '2':
+            // editQuiz("Data/quizez.txt", loggedInUser.username);
+            system("pause");
+            break;
+        case '3':
+            // previewQuiz("Data/quizez.txt" , loggedInUser.username);
+            system("pause");
+            break;
+        case '4': // Assign Quiz
+            // assignQuiz("Data/quizez.txt", "Data/students.txt", "Data/assigned.txt", loggedInUser.username);
+            Sleep(2000);
+            break;
+        case '5':
+            // assignGrades( "Data/grades.txt","Data/results.txt", loggedInUser.username);
+            Sleep(2000);
+            break;
+        case '6':
+            // viewResults("Data/results.txt", "Data/students.txt");
+            Sleep(2000);
+            break;
+        case '7':
+            flag = false;
+            break;
+        default:
+            cout << "Invalid choice!" << endl;
+            Sleep(1000);
+            break;
+        }
+    }
+}
+
+// Student Menue
+void studentMenu(const User &loggedInUser)
+{
+    bool flag = true;
+    char choice;
+    while (flag)
+    {
+        system("cls");
+        cout << "Hello " << loggedInUser.name << " Welcome to Admin Panel" << endl;
+        cout << "Student Menu:" << endl;
+        cout << "1. Attempt Quiz" << endl;
+        cout << "2. View Grades" << endl;
+        cout << "3. Logout" << endl;
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice)
+        {
+        case '1':
+            // attemptQuiz("Data/quizez.txt", "Data/assigned.txt", loggedInUser.username, "Data/results.txt");
+            system("pause");
+            break;
+        case '2':
+            // viewGrades("Data/results.txt", loggedInUser.username);
+            Sleep(2000); // To pause the screen for 2 seconds
+            break;
+        case '3':
+            flag = false;
+            break;
+        default:
+            cout << "Invalid choice!" << endl;
+            Sleep(1000);
+            break;
+        }
+    }
 }
