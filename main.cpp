@@ -6,6 +6,9 @@
 // Namespace for objects like cin and cout and endl
 using namespace std;
 
+int totalCourses = 5;
+int totalSections = 3;
+
 // Structures
 
 struct User
@@ -16,6 +19,42 @@ struct User
     string name;
 };
 
+struct Student
+{
+    string rollNo;
+    string name;
+    char section;
+    int quizAttempted = 0;
+    int *makrsPtr = new int[quizAttempted];
+    char Grade = 'F';
+    int *coursesPtr = new int[5];
+};
+
+struct Teacher
+{
+    string teacherId;
+    string name;
+    bool *coursesPtr = new bool[totalCourses];
+    bool *sectionsPtr = new bool[totalSections];
+};
+
+// Enumerations
+enum Courses // Enum for Courses
+{
+    MATH = 0,
+    PHYSICS,
+    CHEMISTRY,
+    BIOLOGY,
+    CS
+};
+
+enum Sections // Enum for Sections
+{
+    SECTION_A = 0,
+    SECTION_B,
+    SECTION_C
+};
+
 // Function prototypes
 void displayMainMenu();
 bool login(string designation, User &loggedInUser);
@@ -23,6 +62,17 @@ string toLowerCase(string str);
 bool Validation(const string &username, const string &password, const string &role, User &loggedInUser);
 User *getData(const string &location, int &size);
 void adminMenu(const User &loggedInUser);
+void studentMenu(const User &loggedInUser);
+void teacherMenu(const User &loggedInUser);
+void addUser();
+bool validateUsername(const string &location, const string &username);
+void writeUser(User *user);
+Teacher *inputTeacterData(Teacher *teacherptr, string username);
+string sectionsToString(Sections section);
+string courseToString(Courses course);
+void writeTeacher(Teacher *teacherptr);
+Student *inputStudentData(Student *studentptr, string username);
+void writeStudent(Student *studentptr);
 
 // Main function starting point of a cpp program
 int main()
@@ -45,22 +95,33 @@ int main()
         switch (choice)
         {
         case '1': // Admin
-            cout << "Please Enter your credentials: ";
+            cout << "Please Enter your credentials ";
             if (login("admin", loggedInUser))
             {
                 cout << "Login Successful" << endl;
                 Sleep(2000); // To pause the screen for 2 seconds
                 adminMenu(loggedInUser);
             }
-
             system("pause");
             break;
         case '2': // Teacher
-            cout << "Please Enter your credentials:" << endl;
+            cout << "Please Enter your credentials ";
+            if (login("teacher", loggedInUser))
+            {
+                cout << "Login Successful" << endl;
+                Sleep(2000); // To pause the screen for 2 seconds
+                teacherMenu(loggedInUser);
+            }
             system("pause");
             break;
         case '3': // Student
-            cout << "Please Enter your credentials:" << endl;
+            cout << "Please Enter your credentials ";
+            if (login("student", loggedInUser))
+            {
+                cout << "Login Successful" << endl;
+                Sleep(2000); // To pause the screen for 2 seconds
+                studentMenu(loggedInUser);
+            }
             system("pause");
             break;
         case '4': // Exit
@@ -92,6 +153,7 @@ string toLowerCase(string str)
     return str;
 }
 
+// Getting username and password from the user
 bool login(string role, User &loggedInUser)
 {
     string username, password;
@@ -209,7 +271,7 @@ void adminMenu(const User &loggedInUser)
         switch (choice)
         {
         case '1': // Add User
-            // addUser("Data/users.txt");
+            addUser();
             break;
         case '2': // Search User
         {
@@ -338,4 +400,173 @@ void studentMenu(const User &loggedInUser)
             break;
         }
     }
+}
+
+// AddUser function
+void addUser()
+{
+    User *userptr = new User;
+    Teacher *teacherptr = new Teacher;
+    Student *studentptr = new Student;
+    do
+    {
+        cout << "Enter username: ";
+        cin >> (*userptr).username;
+    } while (!validateUsername("Data/users.txt", (*userptr).username));
+    cout << "Enter password: ";
+    cin >> (*userptr).password;
+    cout << "Enter role: ";
+    do
+    {
+        cin >> (*userptr).role;
+        cout << "Enter name: ";
+    } while (!((*userptr).role == "admin" || (*userptr).role == "teacher" || (*userptr).role == "student"));
+    cin.ignore();
+    getline(cin, (*userptr).name);
+    writeUser(userptr);
+    if ((*userptr).role == "teacher")
+    {
+        teacherptr = inputTeacterData(teacherptr, (*userptr).username);
+        writeTeacher(teacherptr);
+    }
+    else if ((*userptr).role == "student")
+    {
+        studentptr = inputStudentData(studentptr, (*userptr).username);
+        writeStudent(studentptr);
+    }
+    delete userptr;
+    delete teacherptr;
+    delete studentptr;
+}
+
+// Validate if the username already exists
+bool validateUsername(const string &location, const string &username)
+{
+    int size = 0;
+    User *data = getData(location, size);
+    for (int i = 0; i < size; i++)
+    {
+        if (data[i].username == username)
+        {
+            delete[] data;
+            return false;
+        }
+    }
+    delete[] data;
+    return true;
+}
+
+// Writing user data to file
+void writeUser(User *user)
+{
+    ofstream file("Data/Users.txt", ios::app);
+    file << (*user).username << " " << (*user).password << " " << (*user).role << " " << (*user).name << endl;
+    file.close();
+}
+
+Teacher *inputTeacterData(Teacher *teacherptr, string username)
+{
+    teacherptr->teacherId = username;
+    cout << "Enter your Name: ";
+    getline(cin, teacherptr->name);
+    cout << "Assign Courses to Teacher (1 for Yes, 0 for No):\n";
+    for (int i = 0; i < totalCourses; i++)
+        do
+        {
+            cout << "Teach " << courseToString((Courses)i) << "? ";
+            cin >> teacherptr->coursesPtr[i];
+        } while (teacherptr->coursesPtr[i] != 0 && teacherptr->coursesPtr[i] != 1);
+
+    for (int i = 0; i < totalSections; i++)
+        do
+        {
+            cout << "Teach " << sectionsToString((Sections)i) << "?";
+            cin >> teacherptr->sectionsPtr[i];
+        } while (teacherptr->sectionsPtr[i] != 0 && teacherptr->sectionsPtr[i] != 1);
+    return teacherptr;
+}
+
+// Function to convert Courses to string bcz the enum was giving index while printing
+string courseToString(Courses course)
+{
+    switch (course)
+    {
+    case MATH:
+        return "Math";
+    case PHYSICS:
+        return "Physics";
+    case CHEMISTRY:
+        return "Chemistry";
+    case BIOLOGY:
+        return "Biology";
+    case CS:
+        return "Computer Science";
+    default:
+        return "Unknown";
+    }
+}
+
+// Function to convert Courses to string bcz enum was giving index while printing
+string sectionsToString(Sections section)
+{
+    switch (section)
+    {
+    case SECTION_A:
+        return "A";
+    case SECTION_B:
+        return "B";
+    case SECTION_C:
+        return "C";
+    default:
+        return "Unknown";
+    }
+}
+
+// Writing Teacher data to file
+void writeTeacher(Teacher *teacherptr)
+{
+    ofstream teacherFile("Data/teachers.txt", ios::app);
+    teacherFile << endl
+                << teacherptr->teacherId << " ";
+    for (int i = 0; i < totalCourses; i++)
+        teacherFile << teacherptr->coursesPtr[i] << " ";
+    for (int i = 0; i < totalSections; i++)
+        teacherFile << teacherptr->sectionsPtr[i] << " ";
+    teacherFile << endl;
+    teacherFile.close();
+}
+
+// Getting Student Information
+Student *inputStudentData(Student *studentptr, string username)
+{
+    studentptr->rollNo = username;
+    do
+    {
+        cout << "Enter your Section (A, B, C): ";
+        cin >> studentptr->section;
+    } while (studentptr->section != 'A' && studentptr->section != 'B' && studentptr->section != 'C');
+    for (int i = 0; i < totalCourses; i++)
+    {
+        do
+        {
+            cout << "Enroll in " << courseToString((Courses)i) << "? ";
+            cin >> studentptr->coursesPtr[i];
+        } while (studentptr->coursesPtr[i] != 0 && studentptr->coursesPtr[i] != 1);
+    }
+    return studentptr;
+}
+
+// Writing Student data to file
+void writeStudent(Student *studentptr)
+{
+    ofstream studentFile("Data/students.txt", ios::app);
+    studentFile
+        << studentptr->rollNo << " " << studentptr->section << " " << studentptr->quizAttempted << " ";
+    for (int i = 0; i < studentptr->quizAttempted; i++)
+        studentFile << studentptr->makrsPtr[i] << " ";
+    studentFile << studentptr->Grade << " ";
+    for (int i = 0; i < totalCourses; i++)
+        studentFile << studentptr->coursesPtr[i] << " ";
+    studentFile << endl;
+    studentFile.close();
 }
